@@ -1,2 +1,2 @@
 # CORS-enabler-for-Discord
-this is a fix for CORS calls made by discord
+this is a fix and permitt CORS calls made by discord
