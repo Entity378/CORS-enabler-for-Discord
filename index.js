@@ -1,9 +1,7 @@
 const { session } = require('electron');
 const fs = require('fs');
-const https = require('https');
 const args = process.argv;
 const path = require('path');
-const querystring = require('querystring');
 
 const CONFIG = {
     filters2: {
