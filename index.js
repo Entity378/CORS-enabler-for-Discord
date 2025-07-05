@@ -115,7 +115,7 @@ function patchedBrowserWindow(options) {
     options.webPreferences = options.webPreferences || {};
     options.webPreferences.webSecurity = false;
     options.webPreferences.allowRunningInsecureContent = true;
-    console.log('[Debug Patch] BrowserWindow creata con webPreferences:', options.webPreferences);
+    console.log('[Debug Patch] BrowserWindow:', options.webPreferences);
 
     const win = new originalBrowserWindow(options);
     return win;
