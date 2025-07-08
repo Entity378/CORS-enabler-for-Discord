@@ -58,7 +58,6 @@ init();`;
     fs.writeFileSync(path.join(appAsarPath, 'package.json'), pkgJson);
 }
 
-//test
 updateCheck()
 
 module.exports = require('./core.asar');
