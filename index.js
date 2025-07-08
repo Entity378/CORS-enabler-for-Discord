@@ -3,22 +3,6 @@ const fs = require('fs');
 const args = process.argv;
 const path = require('path');
 
-const CONFIG = {
-    filters: {
-        urls: [
-            'https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json',
-            'https://*.discord.com/api/v*/applications/detectable',
-            'https://discord.com/api/v*/applications/detectable',
-            'https://*.discord.com/api/v*/users/@me/library',
-            'https://discord.com/api/v*/users/@me/library',
-            'wss://remote-auth-gateway.discord.gg/*',
-            'https://discord.com/api/v*/auth/sessions',
-            'https://*.discord.com/api/v*/auth/sessions',
-            'https://discordapp.com/api/v*/auth/sessions'
-        ],
-    },
-}
-
 const discordPath = (function () {
     const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
     let resourcePath;
@@ -92,18 +76,8 @@ async function updateCheck() {
     }
 }
 
-let checkUpdate = true;
-session.defaultSession.webRequest.onBeforeRequest(CONFIG.filters, (details, callback) => {
-    if (details.url.startsWith("wss://remote-auth-gateway") || details.url.endsWith("auth/sessions")) return callback({
-        cancel: true
-    });
-
-    if(checkUpdate == true)
-    {
-        checkUpdate = false;
-        updateCheck()
-    }
-});
+//test
+updateCheck()
 
 module.exports = require('./core.asar');
 
